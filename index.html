@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>CIDR 段内 IP 地址检测</title>
+    <style>
+        #result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #000000;
+            padding: 10px;
+            text-align: center;
+            color: white;
+        }
+
+        footer a {
+            color: white;
+            /* 添加备案号的文字颜色为白色 */
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>CIDR 段内 IP 地址检测</h1>
+    <p>请输入 IP 地址：</p>
+
+    <input type="text" id="ipAddress" placeholder="IP 地址">
+
+    <p>请输入 CIDR 段（每行一个）：</p>
+
+    <textarea id="cidrList" rows="5" cols="40"></textarea>
+
+    <button onclick="checkCidr()">检测</button>
+
+    <div id="result"></div>
+
+    <script>
+        function checkCidr() {
+            var ipAddress = document.getElementById("ipAddress").value;
+            var cidrList = document.getElementById("cidrList").value.trim().split("\n");
+
+            var result = document.getElementById("result");
+            result.innerHTML = ""; // 清空之前的结果
+
+            var ipParts = ipAddress.split(".");
+            var ip = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+
+            var foundMatch = false; // 标记是否找到匹配的 CIDR 段
+
+            for (var i = 0; i < cidrList.length; i++) {
+                var cidr = cidrList[i].trim();
+
+                var cidrRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/;
+                if (!cidrRegex.test(cidr)) {
+                    result.innerHTML += "无效的 CIDR 段：" + cidr + "<br>";
+                    continue;
+                }
+
+                var cidrParts = cidr.split("/");
+                var cidrIp = cidrParts[0];
+                var cidrRange = parseInt(cidrParts[1]);
+
+                var cidrMask = (0xffffffff << (32 - cidrRange)) >>> 0;
+                var cidrIpNumeric = (cidrIp.split(".")[0] << 24) | (cidrIp.split(".")[1] << 16) | (cidrIp.split(".")[2] << 8) | cidrIp.split(".")[3];
+
+                if ((ip & cidrMask) >>> 0 === (cidrIpNumeric & cidrMask) >>> 0) {
+                    result.innerHTML += "IP 地址 " + ipAddress + " 在以下 CIDR 段内：<br>" + cidr + "<br><br>";
+                    foundMatch = true; // 找到匹配的 CIDR 段
+                }
+            }
+
+            if (!foundMatch) {
+                result.innerHTML = "IP 地址 " + ipAddress + " 不在提供的 CIDR 段内";
+            }
+        }
+    </script>
+</body>
+<footer>
+    <!--Developed by Steve5wutongyu6@163.com-->
+    <a href="https://github.com/Steve5wutongyu6/IPtoCIDRchecker" target="_blank">
+        <img src="https://img.shields.io/github/stars/Steve5wutongyu6/IPtoCIDRchecker.svg?style=social" alt="Github stars">
+    </a>
+</footer>
+
+</html>
